@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "783537627006",
+    "project_id": "flutterassingment",
+    "storage_bucket": "flutterassingment.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783537627006:android:2fd43a732217d08c399d2f",
+        "android_client_info": {
+          "package_name": "com.example.flutter_assingment_todo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuYyO1mIZ4CrwQ06DZA_XKI9uCVN5ccHo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_assingment_todo/profilePage.dart';
 import 'package:flutter_assingment_todo/taskDetailPage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -14,18 +17,67 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String initials = ""; // Store user initials
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserInitials();
+  }
+
+  Future<void> _fetchUserInitials() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot userDoc =
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists) {
+        String firstName = userDoc['firstName'] ?? "";
+        String lastName = userDoc['lastName'] ?? "";
+
+        setState(() {
+          initials = "${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}".toUpperCase();
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           'Todo List',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
         elevation: 3,
+        actions: [
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: CircleAvatar(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.blueAccent,
+                radius: 18,
+                child: Text(
+                  initials,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: BlocBuilder<TaskBloc, TaskState>(
         builder: (context, state) {
@@ -36,27 +88,8 @@ class _HomePageState extends State<HomePage> {
               ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
             if (tasks.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.playlist_add, size: 60, color: Colors.grey),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "No tasks available!",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black54),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Tap the 'Add Task' button below to create your first task.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              );
+              return _buildEmptyTaskView();
             }
-
 
             return ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -66,25 +99,7 @@ class _HomePageState extends State<HomePage> {
               },
             );
           } else {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.playlist_add, size: 60, color: Colors.grey),
-                  const SizedBox(height: 12),
-                  const Text(
-                    "No tasks available!",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Tap the 'Add Task' button below to create your first task.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
+            return _buildEmptyTaskView();
           }
         },
       ),
@@ -101,7 +116,30 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  Widget _buildEmptyTaskView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.playlist_add, size: 60, color: Colors.grey),
+          const SizedBox(height: 12),
+          const Text(
+            "No tasks available!",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black54),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Tap the 'Add Task' button below to create your first task.",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
 
 class TaskCard extends StatefulWidget {
   final Task task;
