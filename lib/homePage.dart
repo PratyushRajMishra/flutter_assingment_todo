@@ -56,14 +56,24 @@ class _HomePageState extends State<HomePage> {
           'Todo List',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blueAccent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
         elevation: 3,
         actions: [
           GestureDetector(
             onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const ProfilePage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
             },
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0),
@@ -109,19 +119,38 @@ class _HomePageState extends State<HomePage> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.blueAccent,
-        onPressed: () async {
-          // Navigate to AddTaskPage and reload tasks on return.
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddTaskPage()),
-          );
-          context.read<TaskBloc>().add(LoadTasksEvent());
-        },
-        icon: const Icon(Icons.add_circle, size: 23, color: Colors.white),
-        label: const Text('Add Task',
-            style: TextStyle(color: Colors.white, fontSize: 17)),
+      floatingActionButton: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 160, // Adjust width to match button size
+            height: 56, // Adjust height to match button size
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(30), // Rounded corners
+            ),
+          ),
+          FloatingActionButton.extended(
+            backgroundColor: Colors.transparent, // Transparent to show gradient
+            elevation: 0, // Remove elevation for better blending
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddTaskPage()),
+              );
+              context.read<TaskBloc>().add(LoadTasksEvent());
+            },
+            icon: const Icon(Icons.add_circle, size: 23, color: Colors.white),
+            label: const Text(
+              'Add Task',
+              style: TextStyle(color: Colors.white, fontSize: 17),
+            ),
+          ),
+        ],
       ),
     );
   }

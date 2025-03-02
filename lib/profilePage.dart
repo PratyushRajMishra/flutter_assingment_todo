@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Import for date formatting
-import '../authentication/auth_bloc.dart'; // Import AuthBloc
-import 'authentication/loginPage.dart'; // Import LoginPage
+import 'package:intl/intl.dart';
+import '../authentication/auth_bloc.dart';
+import 'authentication/loginPage.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -13,79 +13,118 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: Colors.blueAccent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text(
+          'Profile',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthAuthenticated) {
             final User user = state.user;
-            final Map<String, dynamic> userData = state.userData; // ✅ Firestore user data
+            final Map<String, dynamic> userData = state.userData;
 
-            // Extract initials from Firestore data
             String initials = "U";
             if (userData.containsKey('firstName') && userData.containsKey('lastName')) {
               initials = "${userData['firstName'][0]}${userData['lastName'][0]}".toUpperCase();
             }
 
-            // ✅ Format the joining date
             String joiningDate = "Not Available";
             if (userData.containsKey('createdAt') && userData['createdAt'] != null) {
               Timestamp timestamp = userData['createdAt'] as Timestamp;
               DateTime date = timestamp.toDate();
-              joiningDate = DateFormat.yMMMMd().format(date); // Format as "January 1, 2024"
+              joiningDate = DateFormat.yMMMMd().format(date);
             }
 
             return Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Profile Picture
                   Center(
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.blueAccent,
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                    child: Container(
+                      width: 100, // Diameter of CircleAvatar (2 * radius)
+                      height: 100,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.transparent, // Make background transparent
+                        child: Text(
+                          initials,
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    "Name: ${userData['firstName'] ?? 'Not Available'} ${userData['lastName'] ?? ''}",
-                    style: const TextStyle(fontSize: 18),
+
+                  // Profile Information Card
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildProfileInfo("Full Name", "${userData['firstName'] ?? 'Not Available'} ${userData['lastName'] ?? ''}"),
+                          _buildProfileInfo("Email", user.email ?? 'Not Available'),
+                          _buildProfileInfo("Joining Date", joiningDate),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Email: ${user.email ?? 'Not Available'}",
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Joining Date: $joiningDate", // ✅ Display formatted joining date
-                    style: const TextStyle(fontSize: 18),
-                  ),
+
                   const Spacer(),
-                  Center(
+
+                  // Logout Button
+                  SizedBox(
+                    width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
                         context.read<AuthBloc>().add(LogoutEvent());
-
-                        // ✅ Navigate to LoginPage and clear backstack
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(builder: (context) => LoginPage()),
-                              (route) => false, // Clears all previous routes
+                              (route) => false,
                         );
                       },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                      child: const Text("Logout", style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        "Logout",
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -95,6 +134,28 @@ class ProfilePage extends StatelessWidget {
             return const Center(child: Text("User not authenticated"));
           }
         },
+      ),
+    );
+  }
+
+  // Helper Widget for Profile Info
+  Widget _buildProfileInfo(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          ),
+          const Divider(thickness: 1.2),
+        ],
       ),
     );
   }

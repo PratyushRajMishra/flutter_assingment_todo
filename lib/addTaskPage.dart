@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'task_bloc.dart';
 
 class AddTaskPage extends StatefulWidget {
@@ -28,6 +29,21 @@ class _AddTaskPageState extends State<AddTaskPage> {
     "Job Interview"
   ];
   String? _selectedPresetTask;
+
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize local notifications
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    const AndroidInitializationSettings androidInitializationSettings =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: androidInitializationSettings,
+    );
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
 
   Future<void> _pickDate() async {
     DateTime? pickedDate = await showDatePicker(
@@ -55,6 +71,20 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  Future<void> _showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'task_channel_id',
+      'Task Notifications',
+      channelDescription: 'Notification channel for task events',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+    );
+    await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails, payload: 'task_payload');
+  }
+
   Future<void> _saveTaskToFirebase() async {
     if (_taskController.text.isEmpty || _selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +92,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       );
       return;
     }
-
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,7 +99,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       );
       return;
     }
-
     DateTime finalDateTime = DateTime(
       _selectedDate!.year,
       _selectedDate!.month,
@@ -78,9 +106,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       _selectedTime!.hour,
       _selectedTime!.minute,
     );
-
     try {
-      // Save the task with dateTime stored as a Timestamp
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -90,11 +116,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
         'description': _descriptionController.text,
         'dateTime': Timestamp.fromDate(finalDateTime),
         'createdAt': FieldValue.serverTimestamp(),
+        'status': '', // initial status: not complete
       });
-
-      // Trigger task reload in Bloc
+      // Reload tasks via TaskBloc and show a notification.
       if (mounted) {
         context.read<TaskBloc>().add(LoadTasksEvent());
+        await _showNotification("${_taskController.text}", "Your task has been added successfully.");
         Navigator.pop(context);
       }
     } catch (e) {
@@ -109,7 +136,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Add Task')),
+        appBar: AppBar(
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            foregroundColor: Colors.white,
+            title: const Text('Add Task')),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
