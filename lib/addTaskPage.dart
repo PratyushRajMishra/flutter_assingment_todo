@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'task_bloc.dart';
 
 class AddTaskPage extends StatefulWidget {
@@ -34,7 +36,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
-
     if (pickedDate != null) {
       setState(() {
         _selectedDate = pickedDate;
@@ -47,11 +48,59 @@ class _AddTaskPageState extends State<AddTaskPage> {
       context: context,
       initialTime: TimeOfDay.now(),
     );
-
     if (pickedTime != null) {
       setState(() {
         _selectedTime = pickedTime;
       });
+    }
+  }
+
+  Future<void> _saveTaskToFirebase() async {
+    if (_taskController.text.isEmpty || _selectedDate == null || _selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter task and select date & time')),
+      );
+      return;
+    }
+
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+
+    DateTime finalDateTime = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      _selectedTime!.hour,
+      _selectedTime!.minute,
+    );
+
+    try {
+      // Save the task with dateTime stored as a Timestamp
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('tasks')
+          .add({
+        'title': _taskController.text,
+        'description': _descriptionController.text,
+        'dateTime': Timestamp.fromDate(finalDateTime),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Trigger task reload in Bloc
+      if (mounted) {
+        context.read<TaskBloc>().add(LoadTasksEvent());
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving task: $e')),
+      );
     }
   }
 
@@ -83,7 +132,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         ),
                         prefixIcon: const Icon(Icons.task),
                       ),
-                      autofocus: false,
                     ),
                     const SizedBox(height: 10),
                     Align(
@@ -112,8 +160,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       }).toList(),
                     ),
                     const SizedBox(height: 10),
-
-                    // Description Field
                     TextField(
                       maxLength: 100,
                       controller: _descriptionController,
@@ -122,19 +168,16 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        //prefixIcon: const Icon(Icons.description),
                       ),
                       maxLines: 4,
                     ),
                     const SizedBox(height: 10),
-
                     ListTile(
                       leading: const Icon(Icons.calendar_today),
                       title: Text(
                         _selectedDate == null
                             ? 'Select Date'
                             : DateFormat('MMM d, yyyy').format(_selectedDate!),
-                        style: const TextStyle(fontSize: 16),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: _pickDate,
@@ -145,42 +188,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         _selectedTime == null
                             ? 'Select Time'
                             : _selectedTime!.format(context),
-                        style: const TextStyle(fontSize: 16),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: _pickTime,
                     ),
                     const SizedBox(height: 20),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          if (_taskController.text.isNotEmpty &&
-                              _selectedDate != null &&
-                              _selectedTime != null) {
-                            DateTime finalDateTime = DateTime(
-                              _selectedDate!.year,
-                              _selectedDate!.month,
-                              _selectedDate!.day,
-                              _selectedTime!.hour,
-                              _selectedTime!.minute,
-                            );
-
-                            BlocProvider.of<TaskBloc>(context).add(
-                              AddTaskEvent(Task(
-                                title: _taskController.text,
-                                description: _descriptionController.text,
-                                dateTime: finalDateTime,
-                              )),
-                            );
-                            Navigator.pop(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please enter task and select date & time')),
-                            );
-                          }
-                        },
+                        onPressed: _saveTaskToFirebase,
                         icon: const Icon(Icons.add),
                         label: const Text('Add Task'),
                         style: ElevatedButton.styleFrom(

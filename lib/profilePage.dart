@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart'; // Import for date formatting
 import '../authentication/auth_bloc.dart'; // Import AuthBloc
+import 'authentication/loginPage.dart'; // Import LoginPage
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -75,7 +76,13 @@ class ProfilePage extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         context.read<AuthBloc>().add(LogoutEvent());
-                        Navigator.pop(context);
+
+                        // ✅ Navigate to LoginPage and clear backstack
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                              (route) => false, // Clears all previous routes
+                        );
                       },
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
                       child: const Text("Logout", style: TextStyle(color: Colors.white)),

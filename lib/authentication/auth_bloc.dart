@@ -91,7 +91,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       User? user = userCredential.user;
 
       if (user != null) {
-        // ✅ Store user data in Firestore
         await _firestore.collection('users').doc(user.uid).set({
           'firstName': event.firstName,
           'lastName': event.lastName,
@@ -99,16 +98,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           'createdAt': Timestamp.now(),
         });
 
-        // ✅ Retrieve stored user data
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>? ?? {};
-
-        emit(AuthAuthenticated(user: user, userData: userData));
+        emit(AuthInitial()); // ✅ Now user must log in after signing up
       }
     } catch (e) {
       emit(AuthFailure(message: "Signup failed: ${e.toString()}"));
     }
   }
+
 
   /// ✅ LOGIN (Retrieve user data from Firestore)
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {

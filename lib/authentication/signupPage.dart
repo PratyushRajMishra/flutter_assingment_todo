@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../homePage.dart';
-import 'auth_bloc.dart';
-import 'loginPage.dart';
+import '../authentication/auth_bloc.dart';
+import '../authentication/loginPage.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -96,17 +95,24 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 20),
                 BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
-                    if (state is AuthAuthenticated) {
+                    if (state is AuthInitial) { // ✅ Navigate to LoginPage after signup
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Signup Successful')),
+                        const SnackBar(
+                          content: Text('Signup Successful! Please log in.'),
+                          backgroundColor: Colors.green,
+                        ),
                       );
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const HomePage()),
-                      );
+
+                      Future.delayed(const Duration(seconds: 2), () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
+                              (route) => false,
+                        );
+                      });
                     } else if (state is AuthFailure) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.message)),
+                        SnackBar(content: Text(state.message), backgroundColor: Colors.red),
                       );
                     }
                   },

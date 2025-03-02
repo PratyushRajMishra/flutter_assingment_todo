@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -66,35 +68,39 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
 
   void _deleteTask() {
     if (mounted) {
-      context.read<TaskBloc>().add(DeleteTaskEvent(widget.task));
+      context.read<TaskBloc>().add(DeleteTaskEvent(widget.task.id));
       Navigator.pop(context); // Close the details page when deleted
     }
   }
 
-  void _showCompletionDialog() {
+  void _showDeleteDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Confirm Completion"),
-          content: const Text("Are you sure you want to mark this task as complete?"),
+          title: const Text("Confirm delete"),
+          content: const Text("Are you sure you want to delete this task?"),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), // Close dialog
-              child: const Text("Cancel", style: TextStyle(color: Colors.red)),
+              child: const Text("Cancel", style: TextStyle(color: Colors.green)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog
                 _deleteTask(); // Mark task as complete
               },
-              child: const Text("Yes, Complete", style: TextStyle(color: Colors.green)),
+              child: const Text("Yes, Delete", style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
     );
   }
+
+
+
+
 
 
   @override
@@ -162,11 +168,11 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _showCompletionDialog(), // Show confirmation dialog
-                    icon: const Icon(Icons.check_circle, color: Colors.green),
+                    onPressed: () => _showDeleteDialog(), // Show confirmation dialog
+                    icon: const Icon(Icons.delete, color: Colors.red),
                     label: const Text(
-                      'Mark as Complete',
-                      style: TextStyle(color: Colors.green),
+                      'Delete task',
+                      style: TextStyle(color: Colors.red),
                     ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -174,6 +180,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     ),
                   ),
                 ),
+
+                SizedBox(height: 10,),
 
                 SizedBox(height: 10,),
                 SizedBox(
