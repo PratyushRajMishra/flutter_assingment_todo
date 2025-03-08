@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:equatable/equatable.dart';
 
 /// AUTH EVENTS
@@ -36,6 +37,8 @@ class LoginEvent extends AuthEvent {
   List<Object> get props => [email, password];
 }
 
+class GoogleSignInEvent extends AuthEvent {}
+
 class LogoutEvent extends AuthEvent {}
 
 /// AUTH STATES
@@ -48,10 +51,9 @@ class AuthInitial extends AuthState {}
 
 class AuthLoading extends AuthState {}
 
-/// ✅ Updated AuthAuthenticated to include Firestore user data
 class AuthAuthenticated extends AuthState {
   final User user;
-  final Map<String, dynamic> userData; // Store Firestore user data
+  final Map<String, dynamic> userData;
 
   AuthAuthenticated({required this.user, required this.userData});
 
@@ -72,18 +74,21 @@ class AuthFailure extends AuthState {
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   AuthBloc() : super(AuthInitial()) {
     on<SignupEvent>(_onSignup);
     on<LoginEvent>(_onLogin);
+    on<GoogleSignInEvent>(_onGoogleSignIn);
     on<LogoutEvent>(_onLogout);
   }
 
-  /// ✅ SIGNUP (Store user data in Firestore)
+  /// ✅ SIGNUP WITH EMAIL/PASSWORD
   Future<void> _onSignup(SignupEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: event.email,
         password: event.password,
       );
@@ -97,16 +102,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           'email': event.email,
           'createdAt': Timestamp.now(),
         });
-
-        emit(AuthInitial()); // ✅ Now user must log in after signing up
+        emit(AuthInitial());
       }
     } catch (e) {
       emit(AuthFailure(message: "Signup failed: ${e.toString()}"));
     }
   }
 
-
-  /// ✅ LOGIN (Retrieve user data from Firestore)
+  /// ✅ LOGIN WITH EMAIL/PASSWORD
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
@@ -117,23 +120,67 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       User? user = userCredential.user;
       if (user != null) {
-        // ✅ Fetch user data from Firestore
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
-        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>? ?? {};
-
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(user.uid).get();
+        Map<String, dynamic> userData =
+            userDoc.data() as Map<String, dynamic>? ?? {};
         emit(AuthAuthenticated(user: user, userData: userData));
-      } else {
-        emit(AuthFailure(message: "Login failed: User not found"));
       }
     } catch (e) {
       emit(AuthFailure(message: "Login failed: ${e.toString()}"));
     }
   }
 
-  /// ✅ LOGOUT FUNCTION
+  /// ✅ GOOGLE SIGN-IN
+  Future<void> _onGoogleSignIn(
+      GoogleSignInEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        emit(AuthFailure(message: "Google sign-in cancelled"));
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      User? user = userCredential.user;
+
+      if (user != null) {
+        // Check if user exists in Firestore
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(user.uid).get();
+        if (!userDoc.exists) {
+          await _firestore.collection('users').doc(user.uid).set({
+            'firstName': googleUser.displayName?.split(' ')[0] ?? '',
+            'lastName': googleUser.displayName?.split(' ')[1] ?? '',
+            'email': googleUser.email,
+            'createdAt': Timestamp.now(),
+          });
+        }
+
+        // Fetch updated user data
+        userDoc = await _firestore.collection('users').doc(user.uid).get();
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        emit(AuthAuthenticated(user: user, userData: userData));
+      }
+    } catch (e) {
+      emit(AuthFailure(message: "Google Sign-In failed: ${e.toString()}"));
+    }
+  }
+
+  /// ✅ LOGOUT
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     try {
       await _auth.signOut();
+      await _googleSignIn.signOut();
       emit(AuthInitial());
     } catch (e) {
       emit(AuthFailure(message: "Logout failed: ${e.toString()}"));

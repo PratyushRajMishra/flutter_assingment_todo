@@ -44,7 +44,8 @@ class Task extends Equatable {
     return {
       'title': title,
       'description': description,
-      'dateTime': Timestamp.fromDate(dateTime), // Ensures Firestore stores as Timestamp
+      'dateTime':
+          Timestamp.fromDate(dateTime), // Ensures Firestore stores as Timestamp
       'createdAt': Timestamp.now(), // Added for sorting
     };
   }
@@ -129,17 +130,21 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
     try {
       QuerySnapshot taskSnapshot = await _getUserTaskCollection()
-          .orderBy('createdAt', descending: true) // Ensures recent tasks show first
+          .orderBy('createdAt',
+              descending: true) // Ensures recent tasks show first
           .get();
 
-      List<Task> tasks = taskSnapshot.docs.map((doc) {
-        try {
-          return Task.fromFirestore(doc);
-        } catch (e) {
-          print("Skipping task due to error: $e");
-          return null; // Ignore invalid tasks
-        }
-      }).whereType<Task>().toList();
+      List<Task> tasks = taskSnapshot.docs
+          .map((doc) {
+            try {
+              return Task.fromFirestore(doc);
+            } catch (e) {
+              print("Skipping task due to error: $e");
+              return null; // Ignore invalid tasks
+            }
+          })
+          .whereType<Task>()
+          .toList();
 
       print("Tasks fetched: ${tasks.length}");
       emit(TaskLoaded(tasks));
@@ -155,7 +160,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
       print("Adding Task: ${event.task.toFirestore()}");
 
       DocumentReference docRef =
-      await _getUserTaskCollection().add(event.task.toFirestore());
+          await _getUserTaskCollection().add(event.task.toFirestore());
 
       Task newTask = Task(
         id: docRef.id,
@@ -185,8 +190,9 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
       await _getUserTaskCollection().doc(event.taskId).delete();
       final currentState = state;
       if (currentState is TaskLoaded) {
-        emit(TaskLoaded(
-            currentState.tasks.where((task) => task.id != event.taskId).toList()));
+        emit(TaskLoaded(currentState.tasks
+            .where((task) => task.id != event.taskId)
+            .toList()));
       }
     } catch (e) {
       emit(TaskError("Failed to delete task"));

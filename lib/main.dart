@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'authentication/loginPage.dart';
 import 'authentication/auth_bloc.dart';
 import 'authentication/signupPage.dart';
-import 'homePage.dart';
+
 import 'task_bloc.dart';
 
 void main() async {

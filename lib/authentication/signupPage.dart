@@ -13,7 +13,8 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -70,31 +71,38 @@ class _SignupPageState extends State<SignupPage> {
                                 controller: firstNameController,
                                 decoration: InputDecoration(
                                   labelText: 'First Name',
-                                  prefixIcon: const Icon(Icons.person, color: Colors.blueAccent),
+                                  prefixIcon: const Icon(Icons.person,
+                                      color: Colors.blueAccent),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                validator: (value) => value!.isEmpty ? 'Enter your first name' : null,
+                                validator: (value) => value!.isEmpty
+                                    ? 'Enter your first name'
+                                    : null,
                               ),
                               const SizedBox(height: 15),
                               TextFormField(
                                 controller: lastNameController,
                                 decoration: InputDecoration(
                                   labelText: 'Last Name',
-                                  prefixIcon: const Icon(Icons.person_outline, color: Colors.blueAccent),
+                                  prefixIcon: const Icon(Icons.person_outline,
+                                      color: Colors.blueAccent),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                validator: (value) => value!.isEmpty ? 'Enter your last name' : null,
+                                validator: (value) => value!.isEmpty
+                                    ? 'Enter your last name'
+                                    : null,
                               ),
                               const SizedBox(height: 15),
                               TextFormField(
                                 controller: emailController,
                                 decoration: InputDecoration(
                                   labelText: 'Email',
-                                  prefixIcon: const Icon(Icons.email, color: Colors.blueAccent),
+                                  prefixIcon: const Icon(Icons.email,
+                                      color: Colors.blueAccent),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -106,26 +114,33 @@ class _SignupPageState extends State<SignupPage> {
                                 controller: passwordController,
                                 decoration: InputDecoration(
                                   labelText: 'Password',
-                                  prefixIcon: const Icon(Icons.lock, color: Colors.blueAccent),
+                                  prefixIcon: const Icon(Icons.lock,
+                                      color: Colors.blueAccent),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
                                 obscureText: true,
-                                validator: (value) => value!.length < 6 ? 'Password must be at least 6 characters' : null,
+                                validator: (value) => value!.length < 6
+                                    ? 'Password must be at least 6 characters'
+                                    : null,
                               ),
                               const SizedBox(height: 15),
                               TextFormField(
                                 controller: confirmPasswordController,
                                 decoration: InputDecoration(
                                   labelText: 'Confirm Password',
-                                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.blueAccent),
+                                  prefixIcon: const Icon(Icons.lock_outline,
+                                      color: Colors.blueAccent),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
                                 obscureText: true,
-                                validator: (value) => value != passwordController.text ? 'Passwords do not match' : null,
+                                validator: (value) =>
+                                    value != passwordController.text
+                                        ? 'Passwords do not match'
+                                        : null,
                               ),
                               const SizedBox(height: 20),
                               BlocConsumer<AuthBloc, AuthState>(
@@ -133,20 +148,25 @@ class _SignupPageState extends State<SignupPage> {
                                   if (state is AuthInitial) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Signup Successful! Please log in.'),
+                                        content: Text(
+                                            'Signup Successful! Please log in.'),
                                         backgroundColor: Colors.green,
                                       ),
                                     );
-                                    Future.delayed(const Duration(seconds: 2), () {
+                                    Future.delayed(const Duration(seconds: 2),
+                                        () {
                                       Navigator.pushAndRemoveUntil(
                                         context,
-                                        MaterialPageRoute(builder: (context) => LoginPage()),
-                                            (route) => false,
+                                        MaterialPageRoute(
+                                            builder: (context) => LoginPage()),
+                                        (route) => false,
                                       );
                                     });
                                   } else if (state is AuthFailure) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+                                      SnackBar(
+                                          content: Text(state.message),
+                                          backgroundColor: Colors.red),
                                     );
                                   }
                                 },
@@ -160,25 +180,37 @@ class _SignupPageState extends State<SignupPage> {
                                       onPressed: () {
                                         if (_formKey.currentState!.validate()) {
                                           context.read<AuthBloc>().add(
-                                            SignupEvent(
-                                              firstName: firstNameController.text.trim(),
-                                              lastName: lastNameController.text.trim(),
-                                              email: emailController.text.trim(),
-                                              password: passwordController.text.trim(),
-                                            ),
-                                          );
+                                                SignupEvent(
+                                                  firstName: firstNameController
+                                                      .text
+                                                      .trim(),
+                                                  lastName: lastNameController
+                                                      .text
+                                                      .trim(),
+                                                  email: emailController.text
+                                                      .trim(),
+                                                  password: passwordController
+                                                      .text
+                                                      .trim(),
+                                                ),
+                                              );
                                         }
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.blueAccent,
-                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 14),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                       ),
                                       child: const Text(
                                         'Sign Up',
-                                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                   );

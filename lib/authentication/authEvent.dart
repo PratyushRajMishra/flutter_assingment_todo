@@ -5,6 +5,7 @@ abstract class AuthEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// ✅ Event for Email/Password Login
 class LoginEvent extends AuthEvent {
   final String email;
   final String password;
@@ -15,6 +16,7 @@ class LoginEvent extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
+/// ✅ Event for Signup with Email/Password
 class SignupEvent extends AuthEvent {
   final String firstName;
   final String lastName;
@@ -32,5 +34,8 @@ class SignupEvent extends AuthEvent {
   List<Object?> get props => [firstName, lastName, email, password];
 }
 
-// ✅ Define LogoutEvent
+/// ✅ Event for Logout
 class LogoutEvent extends AuthEvent {}
+
+/// ✅ Event for Google Sign-In
+class GoogleSignInEvent extends AuthEvent {}

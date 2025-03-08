@@ -83,25 +83,22 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), // Close dialog
-              child: const Text("Cancel", style: TextStyle(color: Colors.green)),
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.green)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog
                 _deleteTask(); // Mark task as complete
               },
-              child: const Text("Yes, Delete", style: TextStyle(color: Colors.red)),
+              child: const Text("Yes, Delete",
+                  style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
     );
   }
-
-
-
-
-
 
   @override
   void dispose() {
@@ -127,7 +124,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 5,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -137,16 +135,20 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
               children: [
                 Text(
                   widget.task.title,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 20, color: Colors.blue),
+                    const Icon(Icons.calendar_today,
+                        size: 20, color: Colors.blue),
                     const SizedBox(width: 8),
                     Text(
-                      DateFormat('MMM d, yyyy - h:mm a').format(widget.task.dateTime),
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      DateFormat('MMM d, yyyy - h:mm a')
+                          .format(widget.task.dateTime),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -172,14 +174,17 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  widget.task.description.isNotEmpty ? widget.task.description : "No description available",
+                  widget.task.description.isNotEmpty
+                      ? widget.task.description
+                      : "No description available",
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _showDeleteDialog(), // Show confirmation dialog
+                    onPressed: () =>
+                        _showDeleteDialog(), // Show confirmation dialog
                     icon: const Icon(Icons.delete, color: Colors.red),
                     label: const Text(
                       'Delete task',
@@ -187,14 +192,17 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
-
-                SizedBox(height: 10,),
-
-                SizedBox(height: 10,),
+                SizedBox(
+                  height: 10,
+                ),
+                SizedBox(
+                  height: 10,
+                ),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -203,7 +211,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     label: const Text('Back to List'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),

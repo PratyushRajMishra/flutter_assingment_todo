@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_assingment_todo/homePage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -35,11 +36,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize local notifications
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
     const AndroidInitializationSettings androidInitializationSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initializationSettings = InitializationSettings(
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: androidInitializationSettings,
     );
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
@@ -72,7 +73,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   Future<void> _showNotification(String title, String body) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
       'task_channel_id',
       'Task Notifications',
       channelDescription: 'Notification channel for task events',
@@ -82,13 +84,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
     const NotificationDetails notificationDetails = NotificationDetails(
       android: androidDetails,
     );
-    await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails, payload: 'task_payload');
+    await flutterLocalNotificationsPlugin
+        .show(0, title, body, notificationDetails, payload: 'task_payload');
   }
 
   Future<void> _saveTaskToFirebase() async {
-    if (_taskController.text.isEmpty || _selectedDate == null || _selectedTime == null) {
+    if (_taskController.text.isEmpty ||
+        _selectedDate == null ||
+        _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter task and select date & time')),
+        const SnackBar(
+            content: Text('Please enter task and select date & time')),
       );
       return;
     }
@@ -99,6 +105,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       );
       return;
     }
+
     DateTime finalDateTime = DateTime(
       _selectedDate!.year,
       _selectedDate!.month,
@@ -106,8 +113,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
       _selectedTime!.hour,
       _selectedTime!.minute,
     );
+
     try {
-      await FirebaseFirestore.instance
+      // ✅ Save the task to Firestore
+      DocumentReference taskRef = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('tasks')
@@ -116,13 +125,32 @@ class _AddTaskPageState extends State<AddTaskPage> {
         'description': _descriptionController.text,
         'dateTime': Timestamp.fromDate(finalDateTime),
         'createdAt': FieldValue.serverTimestamp(),
-        'status': '', // initial status: not complete
+        'status': '',
       });
-      // Reload tasks via TaskBloc and show a notification.
+
+      // ✅ Save the notification to Firestore
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': user.uid,
+        'taskId': taskRef.id,
+        'title': 'New Task Added',
+        'body': 'Your task "${_taskController.text}" has been added.',
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+      });
+
+      // ✅ Show local notification
+      await _showNotification(
+          "${_taskController.text}", "Your task has been added successfully.");
+
+      // ✅ Reload tasks via TaskBloc
       if (mounted) {
         context.read<TaskBloc>().add(LoadTasksEvent());
-        await _showNotification("${_taskController.text}", "Your task has been added successfully.");
-        Navigator.pop(context);
+
+        // ✅ Navigate to HomePage after task is added
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -176,7 +204,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Or Select a task:",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -237,12 +266,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         onPressed: _saveTaskToFirebase,
                         icon: const Icon(Icons.add),
                         label: const Text('Add Task'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
                       ),
                     ),
                   ],

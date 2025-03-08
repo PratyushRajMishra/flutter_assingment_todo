@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import '../authentication/auth_bloc.dart';
-import 'authentication/loginPage.dart';
+import '../../authentication/auth_bloc.dart';
+import '../authentication/loginPage.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -13,6 +13,7 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -37,12 +38,15 @@ class ProfilePage extends StatelessWidget {
             final Map<String, dynamic> userData = state.userData;
 
             String initials = "U";
-            if (userData.containsKey('firstName') && userData.containsKey('lastName')) {
-              initials = "${userData['firstName'][0]}${userData['lastName'][0]}".toUpperCase();
+            if (userData.containsKey('firstName') &&
+                userData.containsKey('lastName')) {
+              initials = "${userData['firstName'][0]}${userData['lastName'][0]}"
+                  .toUpperCase();
             }
 
             String joiningDate = "Not Available";
-            if (userData.containsKey('createdAt') && userData['createdAt'] != null) {
+            if (userData.containsKey('createdAt') &&
+                userData['createdAt'] != null) {
               Timestamp timestamp = userData['createdAt'] as Timestamp;
               DateTime date = timestamp.toDate();
               joiningDate = DateFormat.yMMMMd().format(date);
@@ -67,7 +71,8 @@ class ProfilePage extends StatelessWidget {
                       ),
                       child: CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.transparent, // Make background transparent
+                        backgroundColor:
+                            Colors.transparent, // Make background transparent
                         child: Text(
                           initials,
                           style: const TextStyle(
@@ -92,8 +97,10 @@ class ProfilePage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildProfileInfo("Full Name", "${userData['firstName'] ?? 'Not Available'} ${userData['lastName'] ?? ''}"),
-                          _buildProfileInfo("Email", user.email ?? 'Not Available'),
+                          _buildProfileInfo("Full Name",
+                              "${userData['firstName'] ?? 'Not Available'} ${userData['lastName'] ?? ''}"),
+                          _buildProfileInfo(
+                              "Email", user.email ?? 'Not Available'),
                           _buildProfileInfo("Joining Date", joiningDate),
                         ],
                       ),
@@ -111,7 +118,7 @@ class ProfilePage extends StatelessWidget {
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(builder: (context) => LoginPage()),
-                              (route) => false,
+                          (route) => false,
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -123,7 +130,10 @@ class ProfilePage extends StatelessWidget {
                       ),
                       child: const Text(
                         "Logout",
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -147,7 +157,8 @@ class ProfilePage extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
