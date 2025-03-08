@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'auth_bloc.dart';
 import '../homePage.dart';
@@ -26,6 +27,12 @@ class _LoginPageState extends State<LoginPage> {
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  /// ✅ Function to save login status in SharedPreferences
+  Future<void> _saveLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
   }
 
   @override
@@ -146,8 +153,12 @@ class _LoginPageState extends State<LoginPage> {
 
                               // ✅ BlocConsumer to listen for Login Success
                               BlocConsumer<AuthBloc, AuthState>(
-                                listener: (context, state) {
+                                listener: (context, state) async {
                                   if (state is AuthAuthenticated) {
+                                    // ✅ Save login status in SharedPreferences
+                                    await _saveLoginStatus();
+
+                                    // ✅ Navigate to Home Page
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
